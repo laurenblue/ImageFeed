@@ -44,9 +44,9 @@
                                                     <state key="normal" title="Button"/>
                                                     <buttonConfiguration key="configuration" style="plain" image="liked"/>
                                                 </button>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="15 мая 2026" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="m0I-OT-IZS" userLabel="Date Label">
-                                                    <rect key="frame" x="24.000000000000007" y="191.66666666666666" width="96.666666666666686" height="20.333333333333343"/>
-                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="15 мая 2026" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="m0I-OT-IZS" userLabel="Date Label">
+                                                    <rect key="frame" x="24" y="196.33333333333334" width="77" height="15.666666666666657"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="13"/>
                                                     <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
@@ -95,7 +95,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-799" y="-335"/>
+            <point key="canvasLocation" x="-999" y="577"/>
         </scene>
         <!--Profile-->
         <scene sceneID="P0g-oa-vQ1">
@@ -112,7 +112,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="EKs-pf-QKM" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-798" y="533"/>
+            <point key="canvasLocation" x="-1129" y="-215"/>
         </scene>
         <!--Tab Bar Controller-->
         <scene sceneID="EtQ-3e-UQV">
@@ -129,8 +129,8 @@
                         </tabBarAppearance>
                     </tabBar>
                     <connections>
-                        <segue destination="TuD-h5-Y3j" kind="relationship" relationship="viewControllers" id="iDU-5K-1WH"/>
-                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="viewControllers" id="h6p-Mo-hXk"/>
+                        <segue destination="BYZ-38-t0r" kind="relationship" relationship="viewControllers" id="OJB-pY-5cb"/>
+                        <segue destination="TuD-h5-Y3j" kind="relationship" relationship="viewControllers" id="HqF-qp-geH"/>
                     </connections>
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="c0D-uq-3Du" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -205,7 +205,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="8S6-kx-Z5d" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="438.93129770992363" y="-335.21126760563379"/>
+            <point key="canvasLocation" x="37" y="577"/>
         </scene>
     </scenes>
     <resources>

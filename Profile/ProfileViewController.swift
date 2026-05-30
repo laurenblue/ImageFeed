@@ -7,12 +7,12 @@
 
 import UIKit
 
-class ProfileViewController: UIViewController
+final class ProfileViewController: UIViewController
 {
-    private let profilePhoto = UIImage(named: "Photo")
-    private let profileName = "Екатерина Новикова"
-    private let profileAccountName = "@ekaterina_nov"
-    private let helloText = "Hello, world!"
+    private lazy var profilePhoto = UIImage(named: "Photo")
+    private lazy var profileName = "Екатерина Новикова"
+    private lazy var profileAccountName = "@ekaterina_nov"
+    private lazy var helloText = "Hello, world!"
     
     override func viewDidLoad() {
         super.viewDidLoad()

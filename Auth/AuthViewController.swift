@@ -17,17 +17,17 @@ final class AuthViewController: UIViewController {
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        guard segue.identifier == showWebViewSegueIdentifier else {
+        if segue.identifier == showWebViewSegueIdentifier {
+            guard
+                let webViewViewController = segue.destination as? WebViewViewController
+            else {
+                assertionFailure("Failed to prepare for \(showWebViewSegueIdentifier)")
+                return
+            }
+            webViewViewController.delegate = self
+        } else {
             super.prepare(for: segue, sender: sender)
-            return
         }
-
-        guard let webViewViewController = segue.destination as? WebViewViewController else {
-            assertionFailure("Failed to prepare for \(showWebViewSegueIdentifier)")
-            return
-        }
-
-        webViewViewController.delegate = self
     }
     
     private func configureBackButton() {
@@ -41,15 +41,18 @@ final class AuthViewController: UIViewController {
 extension AuthViewController: WebViewViewControllerDelegate {
     func webViewViewController(_ vc: WebViewViewController, didAuthenticateWithCode code: String) {
         vc.dismiss(animated: true)
-        
+        UIBlockingProgressHUD.show()
         fetchOAuthToken(code) { [weak self] result in
-            guard let self = self else { return }
-            
+            UIBlockingProgressHUD.dismiss()
+
+            guard let self else { return }
+
             switch result {
             case .success:
                 self.delegate?.didAuthenticate(self)
-            case .failure:
-                break
+            case let .failure(error):
+                print("Ошибка при аутентификации: \(error.localizedDescription)")
+                self.showAuthErrorAlert()
             }
         }
     }
@@ -61,8 +64,21 @@ extension AuthViewController: WebViewViewControllerDelegate {
 
 extension AuthViewController {
     private func fetchOAuthToken(_ code: String, completion: @escaping (Result<String, Error>) -> Void) {
-        oauth2Service.fetchOAuthToken(code: code) { result in
+        oauth2Service.fetchOAuthToken(code) { result in
             completion(result)
         }
+    }
+}
+
+extension AuthViewController {
+    func showAuthErrorAlert() {
+        let alertController = UIAlertController(
+            title: "Что-то пошло не так",
+            message: "Не удалось войти в систему",
+            preferredStyle: .alert
+        )
+        let okAction = UIAlertAction(title: "Ок", style: .default, handler: nil)
+        alertController.addAction(okAction)
+        present(alertController, animated: true, completion: nil)
     }
 }

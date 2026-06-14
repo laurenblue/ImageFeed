@@ -1,6 +1,14 @@
 import Foundation
+import os
 
 extension URLSession {
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "com.unsplash.ImageFeed",
+        category: "NetworkLayer"
+    )
+    
+    private static let sharedDecoder = JSONDecoder()
+    
     func data(
         for request: URLRequest,
         completion: @escaping(Result<Data, Error>) -> Void
@@ -34,28 +42,27 @@ extension URLSession {
         for request: URLRequest,
         completion: @escaping (Result<T, Error>) -> Void
     ) -> URLSessionTask {
-        let decoder = JSONDecoder()
         
         let task = data(for: request) { (result: Result<Data, Error>) in
             switch result {
             case .success(let data):
                 if let jsonString = String(data: data, encoding: .utf8) {
-                    print("Полученные данные: \(jsonString)")
+                    Self.logger.debug("Полученные данные: \(jsonString, privacy: .public)")
                 }
                 do {
-                    let decodedObject = try decoder.decode(T.self, from: data)
+                    let decodedObject = try Self.sharedDecoder.decode(T.self, from: data)
                     completion(.success(decodedObject))
                 } catch {
                     if let decodingError = error as? DecodingError {
-                        print("Ошибка декодирования: \(decodingError), Данные: \(String(data: data, encoding: .utf8) ?? "")")
+                        Self.logger.error("Ошибка декодирования: \(decodingError), Данные: \(String(data: data, encoding: .utf8) ?? "", privacy: .public)")
                     } else {
-                        print("Ошибка декодирования: \(error.localizedDescription), Данные: \(String(data: data, encoding: .utf8) ?? "")")
+                        Self.logger.error("Ошибка декодирования: \(error.localizedDescription), Данные: \(String(data: data, encoding: .utf8) ?? "", privacy: .public)")
                     }
                     completion(.failure(error))
                 }
                 
             case .failure(let error):
-                print("Ошибка запроса: \(error.localizedDescription)")
+                Self.logger.error("Ошибка запроса: \(error.localizedDescription, privacy: .public)")
                 completion(.failure(error))
             }
         }

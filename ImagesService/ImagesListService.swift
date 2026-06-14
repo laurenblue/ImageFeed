@@ -7,10 +7,25 @@
 
 import Foundation
 import CoreGraphics
+import os
+
+enum HTTPMethod: String {
+    case get = "GET"
+    case post = "POST"
+    case put = "PUT"
+    case delete = "DELETE"
+}
 
 final class ImagesListService {
     static let shared = ImagesListService()
-    static let didChangeNotification = Notification.Name(rawValue: "ImagesListServiceDidChange")
+    static let didChangeNotification = Notification.Name("ImagesListServiceDidChange")
+    
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "com.unsplash.ImageFeed",
+        category: "ImagesListService"
+    )
+    
+    private static let dateFormatter = ISO8601DateFormatter()
     
     private(set) var photos: [Photo] = []
     private let urlSession = URLSession.shared
@@ -24,50 +39,38 @@ final class ImagesListService {
         
         let nextPage = (lastLoadedPage ?? 0) + 1
         guard let request = makePhotosRequest(page: nextPage) else {
-            print("Ошибка: Не удалось создать URLRequest для списка фото")
+            Self.logger.error("Ошибка: Не удалось создать URLRequest для списка фото")
             return
         }
         
-        let task = urlSession.dataTask(with: request) { [weak self] data, response, error in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                self.currentTask = nil
-                
-                if let error = error {
-                    print("[fetchPhotosNextPage]: Ошибка сети: \(error.localizedDescription)")
-                    return
-                }
-                
-                guard let data = data else { return }
-                
-                do {
-                    let decoder = JSONDecoder()
-                    let photoResults = try decoder.decode([PhotoResult].self, from: data)
-                    let dateFormatter = ISO8601DateFormatter()
-                    
-                    let newPhotos = photoResults.map { photoResult in
-                        Photo(
-                            id: photoResult.id,
-                            size: CGSize(width: CGFloat(photoResult.width), height: CGFloat(photoResult.height)),
-                            createdAt: photoResult.createdAt != nil ? dateFormatter.date(from: photoResult.createdAt!) : nil,
-                            welcomeDescription: photoResult.description,
-                            thumbImageURL: photoResult.urls.thumb,
-                            largeImageURL: photoResult.urls.full,
-                            isLiked: photoResult.likedByUser
-                        )
-                    }
-                    
-                    self.photos.append(contentsOf: newPhotos)
-                    self.lastLoadedPage = nextPage
-                    
-                    NotificationCenter.default.post(
-                        name: ImagesListService.didChangeNotification,
-                        object: self
+        let task = urlSession.objectTask(for: request) { [weak self] (result: Result<[PhotoResult], Error>) in
+            guard let self = self else { return }
+            self.currentTask = nil
+            
+            switch result {
+            case .success(let photoResults):
+                let newPhotos = photoResults.map { photoResult in
+                    Photo(
+                        id: photoResult.id,
+                        size: CGSize(width: CGFloat(photoResult.width), height: CGFloat(photoResult.height)),
+                        createdAt: photoResult.createdAt.flatMap { Self.dateFormatter.date(from: $0) },
+                        welcomeDescription: photoResult.description,
+                        thumbImageURL: photoResult.urls.thumb,
+                        largeImageURL: photoResult.urls.full,
+                        isLiked: photoResult.likedByUser
                     )
-                    
-                } catch {
-                    print("[fetchPhotosNextPage]: Ошибка декодирования JSON: \(error)")
                 }
+                
+                self.photos.append(contentsOf: newPhotos)
+                self.lastLoadedPage = nextPage
+                
+                NotificationCenter.default.post(
+                    name: ImagesListService.didChangeNotification,
+                    object: self
+                )
+                
+            case .failure(let error):
+                Self.logger.error("[fetchPhotosNextPage]: Ошибка выполнения запроса: \(error.localizedDescription, privacy: .public)")
             }
         }
         
@@ -79,7 +82,7 @@ final class ImagesListService {
         assert(Thread.isMainThread)
         
         guard let request = makeLikeRequest(photoId: photoId, isLike: isLike) else {
-            print("Ошибка: Не удалось создать URLRequest для лайка")
+            Self.logger.error("Ошибка: Не удалось создать URLRequest для лайка")
             return
         }
         
@@ -130,7 +133,7 @@ final class ImagesListService {
         guard let url = URL(string: urlString) else { return nil }
         
         var request = URLRequest(url: url)
-        request.httpMethod = "GET"
+        request.httpMethod = HTTPMethod.get.rawValue
         
         if let token = OAuth2TokenStorage.shared.token {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -144,7 +147,7 @@ final class ImagesListService {
         guard let url = URL(string: urlString) else { return nil }
         
         var request = URLRequest(url: url)
-        request.httpMethod = isLike ? "POST" : "DELETE"
+        request.httpMethod = isLike ? HTTPMethod.post.rawValue : HTTPMethod.delete.rawValue
         
         if let token = OAuth2TokenStorage.shared.token {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")

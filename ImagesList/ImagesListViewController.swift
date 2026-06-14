@@ -1,8 +1,15 @@
 import UIKit
 import Kingfisher
+import os
 
 final class ImagesListViewController: UIViewController {
     private let showSingleImageSegueIdentifier = "ShowSingleImage"
+    
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "com.unsplash.ImageFeed",
+        category: "ImagesListViewController"
+    )
+    
     @IBOutlet private var tableView: UITableView!
     
     private var photos: [Photo] = []
@@ -53,7 +60,7 @@ final class ImagesListViewController: UIViewController {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            guard let self = self else { return }
+            guard let self else { return }
             self.updateTableViewAnimated()
         }
     }
@@ -76,7 +83,7 @@ final class ImagesListViewController: UIViewController {
 
 extension ImagesListViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return photos.count
+        photos.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -103,13 +110,13 @@ extension ImagesListViewController {
         let placeholder = UIImage(named: "stub")
         
         cell.cellImage.kf.setImage(with: url, placeholder: placeholder) { [weak self] result in
-            guard let self = self else { return }
+            guard let self else { return }
             switch result {
-            case .success(_):
+            case .success:
                 self.tableView.beginUpdates()
                 self.tableView.endUpdates()
             case .failure(let error):
-                print("Ошибка загрузки Kingfisher: \(error.localizedDescription)")
+                Self.logger.error("Ошибка загрузки: \(error.localizedDescription, privacy: .public)")
             }
         }
         

@@ -38,24 +38,40 @@ final class SingleImageViewController: UIViewController {
     }
     
     private func downloadLargeImage() {
-        guard let largeImageURL else { return }
-        
-        imageView.kf.indicatorType = .activity
-        // UIBlockingProgressHUD.show()
-        
+        guard let largeImageURL = largeImageURL else { return }
+        UIBlockingProgressHUD.show()
         imageView.kf.setImage(with: largeImageURL) { [weak self] result in
-            guard let self = self else { return }
+            UIBlockingProgressHUD.dismiss()
             
-            // UIBlockingProgressHUD.dismiss()
+            guard let self = self else { return }
             
             switch result {
             case .success(let imageResult):
                 self.image = imageResult.image
                 
-            case .failure(let error):
-                print("Ошибка загрузки полноэкранного фото: \(error.localizedDescription)")
+            case .failure:
+                self.showError()
             }
         }
+    }
+    
+    private func showError() {
+        let alert = UIAlertController(
+            title: "Что-то пошло не так.",
+            message: "Попробовать ещё раз?",
+            preferredStyle: .alert
+        )
+        
+        let dismissAction = UIAlertAction(title: "Нет", style: .cancel, handler: nil)
+        
+        let retryAction = UIAlertAction(title: "Повторить", style: .default) { [weak self] _ in
+            self?.downloadLargeImage()
+        }
+        
+        alert.addAction(dismissAction)
+        alert.addAction(retryAction)
+        
+        present(alert, animated: true, completion: nil)
     }
     
     private func rescaleAndCenterImageInScrollView(image: UIImage) {

@@ -1,30 +1,29 @@
 import UIKit
+import Kingfisher
 
 final class SingleImageViewController: UIViewController {
-    var image: UIImage? {
+    var largeImageURL: URL?
+    
+    private var image: UIImage? {
         didSet {
             guard isViewLoaded, let image else { return }
-
+            
             imageView.image = image
             imageView.frame.size = image.size
             rescaleAndCenterImageInScrollView(image: image)
         }
     }
-
+    
     @IBOutlet private var scrollView: UIScrollView!
     @IBOutlet private var imageView: UIImageView!
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         scrollView.minimumZoomScale = 0.1
         scrollView.maximumZoomScale = 1.25
-
-        guard let image else { return }
-        imageView.image = image
-        imageView.frame.size = image.size
-        rescaleAndCenterImageInScrollView(image: image)
+        downloadLargeImage()
     }
-
+    
     @IBAction private func didTapBackButton() {
         dismiss(animated: true, completion: nil)
     }
@@ -36,6 +35,27 @@ final class SingleImageViewController: UIViewController {
             applicationActivities: nil
         )
         present(share, animated: true, completion: nil)
+    }
+    
+    private func downloadLargeImage() {
+        guard let largeImageURL else { return }
+        
+        imageView.kf.indicatorType = .activity
+        // UIBlockingProgressHUD.show()
+        
+        imageView.kf.setImage(with: largeImageURL) { [weak self] result in
+            guard let self = self else { return }
+            
+            // UIBlockingProgressHUD.dismiss()
+            
+            switch result {
+            case .success(let imageResult):
+                self.image = imageResult.image
+                
+            case .failure(let error):
+                print("Ошибка загрузки полноэкранного фото: \(error.localizedDescription)")
+            }
+        }
     }
     
     private func rescaleAndCenterImageInScrollView(image: UIImage) {

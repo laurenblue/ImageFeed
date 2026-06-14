@@ -152,6 +152,13 @@ final class ImagesListService {
         
         return request
     }
+    
+    func clear() {
+        photos = []
+        lastLoadedPage = nil
+        currentTask?.cancel()
+        currentTask = nil
+    }
 }
 
 extension Array {

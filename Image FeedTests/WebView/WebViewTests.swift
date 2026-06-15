@@ -24,7 +24,7 @@ final class WebViewTests: XCTestCase {
         // then
         XCTAssertTrue(presenter.viewDidLoadCalled)
     }
-    // added 'async' here and in all the funcs below to bypass the memory teardown crash on AuthHelper
+    // добавила 'async' здесь и далее чтобы обойти memory teardown crash on AuthHelper
     func testPresenterCallsLoadRequest() async {
         // given
         let viewController = WebViewViewControllerSpy()

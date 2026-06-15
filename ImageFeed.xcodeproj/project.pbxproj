@@ -90,6 +90,16 @@
 			path = TabBar;
 			sourceTree = "<group>";
 		};
+		00C302712FDF0E0600131643 /* ImagesService */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ImagesService;
+			sourceTree = "<group>";
+		};
+		00DB61F82FDF289800C737CD /* Logout */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Logout;
+			sourceTree = "<group>";
+		};
 		00F03EB72FB5F5330054C42B /* ImageFeed */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -178,6 +188,8 @@
 		00F03EAC2FB5F5330054C42B = {
 			isa = PBXGroup;
 			children = (
+				00DB61F82FDF289800C737CD /* Logout */,
+				00C302712FDF0E0600131643 /* ImagesService */,
 				00C301332FDA01FC00131643 /* TabBar */,
 				00C301262FD9D66000131643 /* Views */,
 				00C300E12FCCE2B800131643 /* ServiceAccessLayer */,
@@ -226,6 +238,8 @@
 				00AC1A662FCCD91C0011414D /* Auth */,
 				00C301262FD9D66000131643 /* Views */,
 				00C301332FDA01FC00131643 /* TabBar */,
+				00C302712FDF0E0600131643 /* ImagesService */,
+				00DB61F82FDF289800C737CD /* Logout */,
 				00F03EB72FB5F5330054C42B /* ImageFeed */,
 			);
 			name = ImageFeed;

@@ -5,6 +5,7 @@ final class SplashViewController: UIViewController {
     
     private let profileService = ProfileService.shared
     private let storage = OAuth2TokenStorage.shared
+    private let oauth2Service = OAuth2Service.shared
     
     private let imageView: UIImageView = {
         let imageView = UIImageView()
@@ -17,12 +18,14 @@ final class SplashViewController: UIViewController {
         super.viewDidLoad()
         
         view.backgroundColor = UIColor(named: "ypBlack") ?? .black
-        
         setupImageView()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        if NSClassFromString("XCTestCase") != nil {
+            return
+        }
         
         if let token = storage.token {
             fetchProfile(token: token)
@@ -51,13 +54,15 @@ final class SplashViewController: UIViewController {
     
     private func presentAuthViewController() {
         let storyboard = UIStoryboard(name: "Main", bundle: .main)
-        guard let authViewController = storyboard.instantiateViewController(withIdentifier: "AuthViewController") as? AuthViewController else {
-            assertionFailure("Не удалось найти AuthViewController по идентификатору")
+        guard let authNavigationController = storyboard.instantiateViewController(withIdentifier: "AuthNavigationController") as? UINavigationController,
+              let authViewController = authNavigationController.viewControllers.first as? AuthViewController else {
+            assertionFailure("Не удалось найти AuthNavigationController или AuthViewController")
             return
         }
         authViewController.delegate = self
-        authViewController.modalPresentationStyle = .fullScreen
-        present(authViewController, animated: true)
+        
+        authNavigationController.modalPresentationStyle = .fullScreen
+        present(authNavigationController, animated: true)
     }
     
     private func switchToTabBarController() {
@@ -75,7 +80,6 @@ final class SplashViewController: UIViewController {
     }
     
     private func fetchProfile(token: String) {
-        UIBlockingProgressHUD.show()
         profileService.fetchProfile(token) { [weak self] result in
             UIBlockingProgressHUD.dismiss()
             
@@ -94,8 +98,22 @@ final class SplashViewController: UIViewController {
 }
 
 extension SplashViewController: AuthViewControllerDelegate {
-    func didAuthenticate(_ vc: AuthViewController) {
-        vc.dismiss(animated: true)
-        switchToTabBarController()
+    func authViewController(_ vc: AuthViewController, didAuthenticateWithCode code: String) {
+        UIBlockingProgressHUD.show()
+        
+        vc.dismiss(animated: true) { [weak self] in
+            guard let self else { return }
+            self.oauth2Service.fetchOAuthToken(code) { [weak self] result in
+                guard let self else { return }
+                switch result {
+                case .success(let token):
+                    self.storage.token = token
+                    self.fetchProfile(token: token)
+                case .failure(let error):
+                    UIBlockingProgressHUD.dismiss()
+                    print("[fetchOAuthTokenError]: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 }

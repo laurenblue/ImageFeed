@@ -1,8 +1,7 @@
 import UIKit
 import Kingfisher
 
-final class ProfileViewController: UIViewController {
-    
+final class ProfileViewController: UIViewController, ProfileViewControllerProtocol {
     private let avatarImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
@@ -47,26 +46,66 @@ final class ProfileViewController: UIViewController {
     
     private var logoutButton: UIButton!
     
-    private var profileImageServiceObserver: NSObjectProtocol?
+    private var presenter: ProfilePresenterProtocol!
+    
+    func configure(_ presenter: ProfilePresenterProtocol) {
+        self.presenter = presenter
+        self.presenter.view = self
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         SetupUI()
-        
-        if let profile = ProfileService.shared.profile {
-            updateProfileDetails(profile: profile)
+        if presenter == nil {
+            let defaultPresenter = ProfilePresenter()
+            configure(defaultPresenter)
         }
         
-        profileImageServiceObserver = NotificationCenter.default
-            .addObserver(
-                forName: ProfileImageService.didChangeNotification,
-                object: nil,
-                queue: .main
-            ) { [weak self] _ in
-                guard let self else { return }
-                self.updateAvatar()
-            }
-        updateAvatar()
+        presenter.viewDidLoad()
+    }
+    
+    func displayProfileDetails(name: String, loginName: String, bio: String) {
+        nameLabel.text = name
+        loginNameLabel.text = loginName
+        descriptionLabel.text = bio
+    }
+    
+    func displayAvatar(url: URL) {
+        let placeholderImage = UIImage(systemName: "person.circle.fill")?
+            .withTintColor(.lightGray, renderingMode: .alwaysOriginal)
+            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 70, weight: .regular, scale: .large))
+        
+        let processor = RoundCornerImageProcessor(cornerRadius: 35)
+        avatarImageView.kf.indicatorType = .activity
+        avatarImageView.kf.setImage(
+            with: url,
+            placeholder: placeholderImage,
+            options: [
+                .processor(processor),
+                .scaleFactor(UIScreen.main.scale),
+                .cacheOriginalImage
+            ]
+        )
+    }
+    
+    @objc private func didTapLogoutButton() {
+        let alert = UIAlertController(
+            title: "Пока, пока!",
+            message: "Уверены, что хотите выйти?",
+            preferredStyle: .alert
+        )
+        
+        let yesAction = UIAlertAction(title: "Да", style: .default) { [weak self] _ in
+            guard let self else { return }
+            self.presenter.logOut()
+        }
+        
+        let noAction = UIAlertAction(title: "Нет", style: .cancel, handler: nil)
+        
+        alert.addAction(yesAction)
+        alert.addAction(noAction)
+        
+        present(alert, animated: true, completion: nil)
     }
     
     private func SetupUI() {
@@ -120,63 +159,5 @@ final class ProfileViewController: UIViewController {
             logoutButton.widthAnchor.constraint(equalToConstant: 44),
             logoutButton.heightAnchor.constraint(equalToConstant: 44)
         ])
-    }
-    
-    private func updateAvatar() {
-        guard
-            let profileImageURL = ProfileImageService.shared.avatarURL,
-            let imageUrl = URL(string: profileImageURL)
-        else { return }
-        
-        print("imageUrl: \(imageUrl)")
-        
-        let placeholderImage = UIImage(systemName: "person.circle.fill")?
-            .withTintColor(.lightGray, renderingMode: .alwaysOriginal)
-            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 70, weight: .regular, scale: .large))
-        
-        let processor = RoundCornerImageProcessor(cornerRadius: 35)
-        avatarImageView.kf.indicatorType = .activity
-        avatarImageView.kf.setImage(
-            with: imageUrl,
-            placeholder: placeholderImage,
-            options: [
-                .processor(processor),
-                .scaleFactor(UIScreen.main.scale),
-                .cacheOriginalImage
-            ]) { result in
-                switch result {
-                case .success(let value):
-                    print(value.image)
-                    print(value.cacheType)
-                    print(value.source)
-                case .failure(let error):
-                    print(error)
-                }
-            }
-    }
-    
-    private func updateProfileDetails(profile: Profile) {
-        nameLabel.text = profile.name.isEmpty ? "Имя не указано" : profile.name
-        loginNameLabel.text = profile.loginName.isEmpty ? "@неизвестный_пользователь" : profile.loginName
-        descriptionLabel.text = (profile.bio?.isEmpty ?? true) ? "Профиль не заполнен" : profile.bio
-    }
-    
-    @objc private func didTapLogoutButton() {
-        let alert = UIAlertController(
-            title: "Пока, пока!",
-            message: "Уверены, что хотите выйти?",
-            preferredStyle: .alert
-        )
-        
-        let yesAction = UIAlertAction(title: "Да", style: .default) { _ in
-            ProfileLogoutService.shared.logout()
-        }
-        
-        let noAction = UIAlertAction(title: "Нет", style: .cancel, handler: nil)
-        
-        alert.addAction(yesAction)
-        alert.addAction(noAction)
-        
-        present(alert, animated: true, completion: nil)
     }
 }
